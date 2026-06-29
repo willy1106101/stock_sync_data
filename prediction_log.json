@@ -1,0 +1,20 @@
+[
+    {
+        "Date": "20260629 18:12:30",
+        "StockID": "2330",
+        "PredictedPrice": 2389.83,
+        "PredictedReturn": "0.84%"
+    },
+    {
+        "Date": "20260629 18:12:43",
+        "StockID": "2317",
+        "PredictedPrice": 245.57,
+        "PredictedReturn": "-0.38%"
+    },
+    {
+        "Date": "20260629 18:12:54",
+        "StockID": "2454",
+        "PredictedPrice": 3928.23,
+        "PredictedReturn": "0.47%"
+    }
+]
