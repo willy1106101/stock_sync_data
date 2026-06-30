@@ -16,5 +16,41 @@
         "StockID": "2454",
         "PredictedPrice": 3928.23,
         "PredictedReturn": "0.47%"
+    },
+    {
+        "Date": "20260630 09:47:49",
+        "StockID": "2330",
+        "PredictedPrice": 2468.49,
+        "PredictedReturn": "0.14%"
+    },
+    {
+        "Date": "20260630 09:48:13",
+        "StockID": "2317",
+        "PredictedPrice": 252.16,
+        "PredictedReturn": "0.06%"
+    },
+    {
+        "Date": "20260630 09:48:38",
+        "StockID": "2454",
+        "PredictedPrice": 4206.66,
+        "PredictedReturn": "0.28%"
+    },
+    {
+        "Date": "20260630 09:50:19",
+        "StockID": "2330",
+        "PredictedPrice": 2479.77,
+        "PredictedReturn": "0.60%"
+    },
+    {
+        "Date": "20260630 09:50:32",
+        "StockID": "2317",
+        "PredictedPrice": 252.87,
+        "PredictedReturn": "-0.05%"
+    },
+    {
+        "Date": "20260630 09:50:45",
+        "StockID": "2454",
+        "PredictedPrice": 4246.78,
+        "PredictedReturn": "0.16%"
     }
 ]
