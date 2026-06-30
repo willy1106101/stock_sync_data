@@ -73,5 +73,26 @@
         "lastPrice": 4210.0,
         "PredictedPrice": 4290.41,
         "PredictedReturn": "1.91%"
+    },
+    {
+        "Date": "20260630 14:49:46",
+        "StockID": "2330",
+        "lastPrice": 2410.0,
+        "PredictedPrice": 2406.21,
+        "PredictedReturn": "-0.16%"
+    },
+    {
+        "Date": "20260630 14:50:39",
+        "StockID": "2317",
+        "lastPrice": 251.0,
+        "PredictedPrice": 267.61,
+        "PredictedReturn": "6.62%"
+    },
+    {
+        "Date": "20260630 14:51:38",
+        "StockID": "2454",
+        "lastPrice": 4245.0,
+        "PredictedPrice": 4292.85,
+        "PredictedReturn": "1.13%"
     }
 ]
