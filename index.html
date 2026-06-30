@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Willy 股票預測儀表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 p-6">
+    <div id="app" class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">📈 股票預測儀表板</h1>
+
+        <div class="flex gap-4 mb-6">
+            <button class="stock-btn px-6 py-2 bg-blue-600 text-white rounded-lg" data-id="2330">2330</button>
+            <button class="stock-btn px-6 py-2 bg-blue-600 text-white rounded-lg" data-id="2317">2317</button>
+            <button class="stock-btn px-6 py-2 bg-blue-600 text-white rounded-lg" data-id="2454">2454</button>
+        </div>
+        <div id="current-stock"></div>
+        <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-md border">
+                <p class="text-gray-500">最新收盤價</p>
+                <h2 id="current-price" class="text-4xl font-bold text-gray-800">--</h2>
+                <p class="mt-2 text-sm"><span id="current-return">--</span> | <span id="current-Date">--</span></p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md border">
+                <p class="text-gray-500">這次預測</p>
+                <h2 id="predicted-price" class="text-3xl font-bold text-red-500">--</h2>
+                <p class="mt-2 text-sm"><span id="predicted-return">--</span> | <span id="rlastPrice">--</span> | <span
+                        id="lastDate">--</span></p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md border">
+                <p class="text-gray-500">上次預測</p>
+                <h2 id="prepredicted-price" class="text-3xl font-bold text-red-500">--</h2>
+                <p class="mt-2 text-sm"><span id="prepredicted-return">--</span> | <span id="prelastPrice">--</span> |
+                    <span id="prelastDate">--</span>
+                </p>
+            </div>
+            <div class="p-6 bg-white rounded-xl shadow-md border">
+                <canvas id="stockChart"></canvas>
+            </div>
+        </div>
+        <div class="mt-6 bg-white p-6 rounded-xl shadow-md border">
+            <h2 class="text-xl font-bold mb-4">股價資料</h2>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-300 text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border px-3 py-2">日期</th>
+                            <th class="border px-3 py-2">開盤</th>
+                            <th class="border px-3 py-2">最高</th>
+                            <th class="border px-3 py-2">最低</th>
+                            <th class="border px-3 py-2">收盤</th>
+                            <th class="border px-3 py-2">成交量</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priceTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let chart = null;
+        let sto = null;
+
+        function toROCDate(dateTime) {
+            const d = new Date(dateTime);
+
+            const rocYear = d.getFullYear() - 1911;
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+
+            return `${rocYear}/${month}/${day}`;
+        }
+
+        function renderTable(prices) {
+
+            const tbody = document.getElementById("priceTable");
+
+            tbody.innerHTML = "";
+
+            prices.slice(-30).reverse().forEach(item => {
+
+                tbody.innerHTML += `
+            <tr>
+                <td class="border px-3 py-1">${item.date}</td>
+                <td class="border px-3 py-1">${item.open}</td>
+                <td class="border px-3 py-1">${item.high}</td>
+                <td class="border px-3 py-1">${item.low}</td>
+                <td class="border px-3 py-1">${item.close}</td>
+                <td class="border px-3 py-1">${item.volume}</td>
+            </tr>
+        `;
+            });
+
+        }
+
+        async function fetchData(stockId) {
+            // 1. 先清除舊的計時器，避免多重疊加
+            if (sto) clearInterval(sto);
+
+            try {
+                const [logRes, priceRes] = await Promise.all([
+                    fetch('./logs/pred.json'),
+                    fetch(`./data/stock_price/${stockId}.json`)
+                ]);
+
+                const logs = await logRes.json();
+                console.log(logs);
+                const prices = await priceRes.json();
+
+                const stockLogs = logs.filter(item => item.stock === stockId);
+                const latest = stockLogs[stockLogs.length - 1];
+                const prelatest = stockLogs[stockLogs.length - 2];
+                console.log(prelatest);
+                // 漲跌幅格式化工具
+                const creturn = (e) => (e * 100).toFixed(2) + "%";
+
+                // 更新 UI
+                document.getElementById('current-stock').innerText = `${stockId}`;
+                document.getElementById('dashboard').classList.remove('hidden');
+
+                const lastPriceData = prices[prices.length - 1];
+                const prevPriceData = prices[prices.length - 2];
+
+                const preturn =
+                    (lastPriceData.close - prevPriceData.close) /
+                    prevPriceData.close;
+                document.getElementById('current-price').innerText = lastPriceData.close.toFixed(2);
+                document.getElementById('current-return').innerText = `漲跌幅: ${parseFloat(preturn * 100).toFixed(2)}%`;
+                document.getElementById('current-Date').innerText = `日期: ${lastPriceData.date}`;
+
+                // 預測數據顯示 (加上防呆檢查)
+                if (latest) {
+                    document.getElementById('predicted-price').innerText = parseFloat(latest.pred).toFixed(2);
+                    document.getElementById('predicted-return').innerText = `漲跌幅: ${creturn(parseFloat(latest.return))}`;
+                    document.getElementById('rlastPrice').innerText = `預測前價格: ${parseFloat(latest.last)}`;
+                    document.getElementById('lastDate').innerText = `日期: ${latest.time}`;
+                }
+
+                if (prelatest) {
+                    document.getElementById('prepredicted-price').innerText = parseFloat(prelatest.pred).toFixed(2);
+                    document.getElementById('prepredicted-return').innerText = `漲跌幅: ${creturn(parseFloat(prelatest.return))}`;
+                    document.getElementById('prelastPrice').innerText = `預測前價格: ${parseFloat(prelatest.last)}`;
+                    document.getElementById('prelastDate').innerText = `日期: ${prelatest.time}`;
+                }
+                renderTable(prices);
+                renderChart(prices, stockLogs);
+
+            } catch (e) {
+                console.error("載入失敗:", e);
+            }
+
+            // 2. 數據更新完成後，才設定下一次的自動更新
+            // 注意：這裡只執行 fetchData，不重複設定 interval
+            sto = setInterval(() => {
+                console.log(`自動更新 ${stockId}...`);
+                fetchData(stockId);
+            }, 5000);
+        }
+
+        function renderChart(prices, logs) {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+
+            if (chart) chart.destroy();
+
+            const lastPrices = prices.slice(-30);
+
+            // 建立 date -> pred 對照
+            const predMap = new Map(logs.map(x => [toROCDate(x.time), x.pred]));
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: lastPrices.map(x => x.date),
+                    datasets: [
+                        {
+                            label: '收盤價',
+                            data: lastPrices.map(x => x.close),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'transparent',
+                            tension: 0.3
+                        },
+                        {
+                            label: '預測',
+                            data: lastPrices.map(x => predMap.get(x.date) ?? null),
+                            borderColor: '#ef4444',
+                            borderDash: [6, 4],
+                            backgroundColor: 'transparent',
+                            tension: 0.3
+                        }
+                    ]
+                }
+            });
+        }
+
+        // 綁定所有按鈕點擊事件
+        document.querySelectorAll('.stock-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => fetchData(e.target.dataset.id));
+        });
+        fetchData('2330');
+    </script>
+</body>
+
+</html>
+<!-- 
+.\venv\Scripts\activate
+python main_2.py
+-->
