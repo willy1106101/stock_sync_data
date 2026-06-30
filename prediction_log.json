@@ -52,5 +52,12 @@
         "StockID": "2454",
         "PredictedPrice": 4246.78,
         "PredictedReturn": "0.16%"
+    },
+    {
+        "Date": "20260630 10:25:06",
+        "StockID": "2330",
+        "lastPrice": 2455.0,
+        "PredictedPrice": 2444.69,
+        "PredictedReturn": "-0.42%"
     }
 ]
