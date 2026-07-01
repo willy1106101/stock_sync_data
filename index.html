@@ -17,6 +17,27 @@
             <button class="stock-btn px-6 py-2 bg-blue-600 text-white rounded-lg" data-id="2454">2454</button>
         </div>
         <div id="current-stock"></div>
+        <div class="mt-6 bg-white p-6 rounded-xl shadow-md border">
+            <h2 class="text-xl font-bold mb-4">即時報價 (來自證交所)</h2>
+            <div id="realtime-data" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500">成交價</p>
+                    <p id="rt-price" class="font-bold text-xl">--</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500">漲跌</p>
+                    <p id="rt-diff" class="font-bold text-xl">--</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500">昨收</p>
+                    <p id="rt-yprice" class="font-bold text-xl">--</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500">單量</p>
+                    <p id="rt-vol" class="font-bold text-xl">--</p>
+                </div>
+            </div>
+        </div>
         <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
             <div class="bg-white p-6 rounded-xl shadow-md border">
                 <p class="text-gray-500">最新收盤價</p>
@@ -148,6 +169,7 @@
                 }
                 renderTable(prices);
                 renderChart(prices, stockLogs);
+                fetchRealtimePrice(stockId);
 
             } catch (e) {
                 console.error("載入失敗:", e);
@@ -159,6 +181,24 @@
                 console.log(`自動更新 ${stockId}...`);
                 fetchData(stockId);
             }, 5000);
+        }
+
+        async function fetchRealtimePrice(stockId) {
+            try {
+                // 若直接呼叫失敗，請將此網址指向你自己的後端路由
+                const response = await fetch(`https://mis.twse.com.tw/stock/api/getStockInfo.jsp?json=1&delay=0&ex_ch=tse_${stockId}.tw`);
+                const data = await response.json();
+
+                if (data.msgArray && data.msgArray.length > 0) {
+                    const stock = data.msgArray[0];
+                    document.getElementById('rt-price').innerText = stock.z || "--";
+                    document.getElementById('rt-diff').innerText = stock.z - stock.y > 0 ? `+${(stock.z - stock.y).toFixed(2)}` : (stock.z - stock.y).toFixed(2);
+                    document.getElementById('rt-yprice').innerText = stock.y || "--";
+                    document.getElementById('rt-vol').innerText = stock.tv || "--";
+                }
+            } catch (e) {
+                console.warn("無法取得即時報價 (可能受限於 CORS):", e);
+            }
         }
 
         function renderChart(prices, logs) {
